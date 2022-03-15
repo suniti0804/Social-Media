@@ -1,14 +1,14 @@
 package com.example.project10
 
-import android.annotation.SuppressLint
-import android.content.ContentValues.TAG
+
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.content.Context
 import android.content.Intent
 import android.util.Log
 import android.view.View
 import com.example.project10.daos.UserDao
+import com.example.project10.databinding.ActivitySignInBinding
+import com.example.project10.models.User
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
@@ -19,16 +19,14 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.ktx.auth
-import com.google.firebase.firestore.auth.User
 import com.google.firebase.ktx.Firebase
-import kotlinx.android.synthetic.main.activity_sign_in.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
-import kotlinx.coroutines.withContext
 
 class SignInActivity : AppCompatActivity() {
+    private lateinit var binding:ActivitySignInBinding
 
     private val RC_SIGN_IN: Int = 123
     private val TAG = "SignInActivity Tag"
@@ -38,17 +36,18 @@ class SignInActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_sign_in)
+        binding = ActivitySignInBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         // Configure Google Sign In
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestIdToken(getString(R.string.default_web_client_id))
+            .requestIdToken(getString(R.string.clientId))
             .requestEmail()
             .build()
         googleSignInClient = GoogleSignIn.getClient(this, gso);
         auth = Firebase.auth
 
-        signInButton.setOnClickListener{
+        binding.signInButton.setOnClickListener {
             signIn()
         }
 
@@ -61,8 +60,8 @@ class SignInActivity : AppCompatActivity() {
     }
 
 
-    private fun signIn(){
-        val signInIntent =googleSignInClient.signInIntent
+    private fun signIn() {
+        val signInIntent = googleSignInClient.signInIntent
         startActivityForResult(signInIntent, RC_SIGN_IN)
     }
 
@@ -89,22 +88,21 @@ class SignInActivity : AppCompatActivity() {
 
     private fun firebaseAuthWithGoogle(idToken: String) {
         val credential = GoogleAuthProvider.getCredential(idToken, null)
-        signInButton.visibility = View.GONE
-        progressBar.visibility = View.VISIBLE
-        GlobalScope.launch(Dispatchers.IO) {
+        binding.signInButton.visibility = View.GONE
+        binding.progressBar.visibility = View.VISIBLE
+
+        GlobalScope.launch(Dispatchers.Main) {
             val auth = auth.signInWithCredential(credential).await()
             val firebaseUser = auth.user
-            withContext(Dispatchers.Main) {
-                updateUI(firebaseUser)
-            }
+            updateUI(firebaseUser)
         }
 
     }
 
     private fun updateUI(firebaseUser: FirebaseUser?) {
-        if(firebaseUser != null) {
-
-            val user = User(firebaseUser.uid, firebaseUser.displayName, firebaseUser.photoUrl.toString())
+        if (firebaseUser != null) {
+            val user =
+                User(firebaseUser.uid, firebaseUser.displayName, firebaseUser.photoUrl.toString())
             val usersDao = UserDao()
             usersDao.addUser(user)
 
@@ -112,8 +110,8 @@ class SignInActivity : AppCompatActivity() {
             startActivity(mainActivityIntent)
             finish()
         } else {
-            signInButton.visibility = View.VISIBLE
-            progressBar.visibility = View.GONE
+            binding.signInButton.visibility = View.VISIBLE
+            binding.progressBar.visibility = View.GONE
         }
     }
 

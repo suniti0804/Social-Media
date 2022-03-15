@@ -15,6 +15,7 @@ import com.google.firebase.firestore.Query
 class MainActivity : AppCompatActivity(), IPostAdapter {
     private lateinit var adapter: PostAdapter
     private lateinit var binding: ActivityMainBinding
+    private lateinit var postDao: PostDao
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -22,7 +23,7 @@ class MainActivity : AppCompatActivity(), IPostAdapter {
         binding= ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        fab.setOnClickListener{
+        binding.fab.setOnClickListener{
             val intent = Intent(this, CreatePostActivity::class.java)
             startActivity(intent)
         }
@@ -39,8 +40,8 @@ class MainActivity : AppCompatActivity(), IPostAdapter {
 
         adapter = PostAdapter(recyclerViewOptions, this)
 
-        recyclerView.adapter = adapter
-        recyclerView.layoutManager = LinearLayoutManager(this)
+        binding.recyclerView.adapter = adapter
+        binding.recyclerView.layoutManager = LinearLayoutManager(this)
     }
 
     override fun onStart() {
